@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "cloudflare-dailyworklog",
+  "main": "backend/src/worker.js",
+  "compatibility_date": "2026-07-23",
+  "vars": {
+    "DWL_ALLOWED_ORIGINS": "*",
+    "DWL_ALLOWED_REGISTRATION_DOMAINS": "*",
+    "DWL_ADMIN_EMAILS": "harshr@hexaware.com,harsh.rana@corpay.com,harshpratapanausa@gmail.com",
+    "DWL_TIME_ZONE": "America/New_York"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "daily-work-log",
+      "database_id": "1c9a82fd-ea62-49ac-baf4-86909f7a4a81",
+      "migrations_dir": "backend/migrations"
+    }
+  ]
+}

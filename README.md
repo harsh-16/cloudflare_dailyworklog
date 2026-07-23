@@ -30,15 +30,24 @@ pages/app.js
 Expected values:
 
 ```js
-var DEFAULT_INSTANCE = 'https://daily-work-log-api.harshpratapranausa.workers.dev';
+var DEFAULT_INSTANCE = 'https://cloudflare-dailyworklog.harshpratapranausa.workers.dev';
 var DEFAULT_API_PATH = '/rpc';
 ```
 
 ## Cloudflare Worker Backend Setup
 
-Create or update a Cloudflare Worker Git deployment connected to this repository.
+Create or update the existing `cloudflare-dailyworklog` Cloudflare Worker Git deployment connected to this repository.
 
-Use these build settings:
+Recommended build settings from the repository root:
+
+```text
+Root directory: leave blank
+Build command: npm install
+Deploy command: npm run deploy
+Production branch: main
+```
+
+Alternative build settings from the backend folder:
 
 ```text
 Root directory: backend
@@ -56,7 +65,7 @@ backend/wrangler.toml
 The Worker should expose:
 
 ```text
-https://daily-work-log-api.harshpratapranausa.workers.dev/rpc
+https://cloudflare-dailyworklog.harshpratapranausa.workers.dev/rpc
 ```
 
 A healthy unauthenticated API check should return an API-key-required error, not `404`.

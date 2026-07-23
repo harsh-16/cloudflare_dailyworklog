@@ -1,0 +1,13 @@
+{
+  "name": "cloudflare-dailyworklog",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply daily-work-log --remote"
+  },
+  "devDependencies": {
+    "wrangler": "latest"
+  }
+}

@@ -64,12 +64,12 @@ https://daily-work-log-dow.pages.dev
 Cloudflare Worker backend:
 
 ```text
-https://daily-work-log-api.harshpratapranausa.workers.dev
+https://cloudflare-dailyworklog.harshpratapranausa.workers.dev
 ```
 
 In the Daily Work Log Connection page, use:
 
-- Instance URL: `https://daily-work-log-api.harshpratapranausa.workers.dev`
+- Instance URL: `https://cloudflare-dailyworklog.harshpratapranausa.workers.dev`
 - API path: `/rpc`
 - API key: leave blank, then use self-registration to create your personal key
 

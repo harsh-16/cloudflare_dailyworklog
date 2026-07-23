@@ -9,7 +9,7 @@
   var PENDING_TOPIC_FILTER_KEY = 'dailyWorkLogPendingTopicFilter';
   var PENDING_UPDATE_FILTER_KEY = 'dailyWorkLogPendingUpdateFilter';
   var COMMAND_FILTER_KEY = 'dailyWorkLogCommandFilter';
-  var DEFAULT_INSTANCE = 'https://daily-work-log-api.harshpratapranausa.workers.dev';
+  var DEFAULT_INSTANCE = 'https://cloudflare-dailyworklog.harshpratapranausa.workers.dev';
   var DEFAULT_API_PATH = '/rpc';
   var PAGE_PATHS = {
     home: 'x_552119_daily_w_0_daily_work_log_standalone_home.do',
