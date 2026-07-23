@@ -58,18 +58,18 @@ capture/lookup actions.
 Cloudflare Pages frontend:
 
 ```text
-https://daily-work-log-dow.pages.dev
+https://worklog.harsh16.workers.dev/
 ```
 
 Cloudflare Worker backend:
 
 ```text
-https://cloudflare-dailyworklog.harshpratapranausa.workers.dev
+https://dailyworklog-api.harsh16.workers.dev
 ```
 
 In the Daily Work Log Connection page, use:
 
-- Instance URL: `https://cloudflare-dailyworklog.harshpratapranausa.workers.dev`
+- Instance URL: `https://dailyworklog-api.harsh16.workers.dev`
 - API path: `/rpc`
 - API key: leave blank, then use self-registration to create your personal key
 

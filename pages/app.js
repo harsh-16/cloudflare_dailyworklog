@@ -9,7 +9,7 @@
   var PENDING_TOPIC_FILTER_KEY = 'dailyWorkLogPendingTopicFilter';
   var PENDING_UPDATE_FILTER_KEY = 'dailyWorkLogPendingUpdateFilter';
   var COMMAND_FILTER_KEY = 'dailyWorkLogCommandFilter';
-  var DEFAULT_INSTANCE = 'https://cloudflare-dailyworklog.harshpratapranausa.workers.dev';
+  var DEFAULT_INSTANCE = 'https://dailyworklog-api.harsh16.workers.dev';
   var DEFAULT_API_PATH = '/rpc';
   var PAGE_PATHS = {
     home: 'x_552119_daily_w_0_daily_work_log_standalone_home.do',
@@ -1469,6 +1469,14 @@
     showPage('topics');
   }
 
+  function openNewTopic() {
+    saveSelectedTopic('');
+    state.topicEditId = '';
+    state.topicEditMode = true;
+    setSessionJson(PENDING_TOPIC_FILTER_KEY, { create: true });
+    showPage('topics');
+  }
+
   function openUpdatesWithFilters(filters) {
     setSessionJson(PENDING_UPDATE_FILTER_KEY, filters || {});
     showPage('updates');
@@ -1490,7 +1498,11 @@
     setControlValue('du-topic-filter-to', filters.to);
     setControlValue('du-topic-filter-search', filters.search);
 
-    if (filters.topic) {
+    if (filters.create) {
+      saveSelectedTopic('');
+      state.topicEditId = '';
+      state.topicEditMode = true;
+    } else if (filters.topic) {
       saveSelectedTopic(filters.topic);
     }
 
@@ -4940,6 +4952,7 @@
     on('du-open-settings', 'click', function() {
       showSettings(true);
     });
+    on('du-home-new-topic', 'click', openNewTopic);
     on('du-close-settings', 'click', function() {
       showSettings(false);
     });
