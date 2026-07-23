@@ -1,0 +1,760 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Work Log</title>
+  <link rel="stylesheet" href="daily-work-log-shared.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="du-shell">
+    <header class="du-header">
+      <div>
+        <h1>Daily Work Log</h1>
+        <p>Personal Command Control</p>
+      </div>
+      <div class="du-top-actions">
+        <div class="du-global-search">
+          <label class="du-sr-only" for="du-global-search">Search topics, updates, notes, and to-dos</label>
+          <input id="du-global-search" type="search" placeholder="Search work log" autocomplete="off">
+          <div class="du-search-results" id="du-global-results" hidden></div>
+        </div>
+        <span class="du-connection" id="du-connection-state">Not connected</span>
+        <button class="du-btn" id="du-export-week" type="button">Export week</button>
+        <button class="du-btn" id="du-open-settings" type="button">Connection</button>
+        <button class="du-btn" id="du-refresh" type="button">Refresh</button>
+      </div>
+    </header>
+
+    <nav class="du-nav" aria-label="Daily Work Log pages">
+      <button class="is-selected" id="du-nav-home" type="button" data-page="home">Home</button>
+      <button id="du-nav-workspace" type="button" data-page="workspace">Workspace</button>
+      <button id="du-nav-topics" type="button" data-page="topics">Topics</button>
+      <button id="du-nav-updates" type="button" data-page="updates">Updates</button>
+      <button id="du-nav-notes" type="button" data-page="notes">Notes</button>
+      <button id="du-nav-ai" type="button" data-page="ai">AI Helper</button>
+      <button id="du-nav-users" type="button" data-page="users" hidden>Users</button>
+      <button id="du-nav-connection" type="button" data-page="connection">Connection</button>
+    </nav>
+
+    <section class="du-settings" id="du-page-connection" hidden>
+      <div class="du-panel">
+        <div class="du-panel-header">
+          <div>
+            <h2>Connection Setup</h2>
+            <p>Each person uses the same page with their own Daily Work Log API key.</p>
+          </div>
+          <button class="du-link-btn" id="du-close-settings" type="button">Home</button>
+        </div>
+        <div class="du-panel-body">
+          <div class="du-setup-intro">
+            <div>
+              <span class="du-eyebrow">First-time setup</span>
+              <h2>Connect this browser to your work log</h2>
+              <p>Paste your existing API key, or register yourself to create a new profile and personal key. The key is saved only in this browser and controls which data you can see.</p>
+            </div>
+            <div class="du-profile-card" id="du-connection-profile" hidden></div>
+          </div>
+
+          <div class="du-connection-tabs" role="tablist" aria-label="Connection setup options">
+            <button class="is-selected" id="du-connect-existing-tab" type="button" data-connection-panel="existing">Use API key</button>
+            <button id="du-register-tab" type="button" data-connection-panel="register">Register</button>
+          </div>
+
+          <form id="du-settings-form">
+            <div id="du-existing-connection-panel">
+              <div class="du-form-grid">
+                <div class="du-field du-full">
+                  <label for="du-api-key">Your Daily Work Log API key</label>
+                  <input id="du-api-key" type="password" autocomplete="current-password" placeholder="Paste your personal key" required>
+                </div>
+              </div>
+              <details class="du-advanced-connection">
+                <summary>Advanced connection details</summary>
+                <div class="du-form-grid">
+                  <div class="du-field">
+                    <label for="du-instance-url">Cloudflare Worker URL</label>
+                    <input id="du-instance-url" type="url" placeholder="https://daily-work-log-api.harshpratapranausa.workers.dev" required>
+                  </div>
+                  <div class="du-field">
+                    <label for="du-api-path">Scripted REST resource path</label>
+                    <input id="du-api-path" type="text" value="/rpc" required>
+                  </div>
+                </div>
+              </details>
+              <div class="du-actions">
+                <button class="du-btn" id="du-test-connection" type="button">Test</button>
+                <button class="du-btn du-danger-text" id="du-clear-settings" type="button">Clear</button>
+                <button class="du-btn du-btn-primary" type="submit">Test and save</button>
+              </div>
+            </div>
+          </form>
+
+          <form id="du-register-form" hidden>
+            <div class="du-form-grid">
+              <div class="du-field">
+                <label for="du-register-name">Name</label>
+                <input id="du-register-name" type="text" maxlength="100" autocomplete="name" required>
+              </div>
+              <div class="du-field">
+                <label for="du-register-email">Email</label>
+                <input id="du-register-email" type="email" maxlength="150" autocomplete="email" required>
+              </div>
+              <div class="du-field du-full">
+                <label for="du-register-code">Registration code</label>
+                <input id="du-register-code" type="password" autocomplete="one-time-code" placeholder="Required only if configured by the app owner">
+              </div>
+            </div>
+            <div class="du-actions">
+              <button class="du-btn du-btn-primary" type="submit">Register and create key</button>
+            </div>
+          </form>
+
+          <div class="du-generated-key" id="du-registration-key" hidden></div>
+        </div>
+      </div>
+    </section>
+
+      <section id="du-page-home">
+        <section class="du-dashboard" id="du-dashboard" aria-label="Dashboard snapshot"></section>
+        <section class="du-command-filters" id="du-command-filters" aria-label="Work command filters"></section>
+
+        <section class="du-panel du-brief-panel" aria-label="Daily brief automation">
+          <div class="du-panel-header">
+            <div>
+              <h2>Daily Brief</h2>
+              <p>Plan, risks, prep, and update gaps for today.</p>
+            </div>
+            <div class="du-card-actions">
+              <button class="du-link-btn" id="du-copy-daily-brief" type="button">Copy brief</button>
+              <button class="du-link-btn" id="du-open-brief-focus" type="button">Open focus</button>
+            </div>
+          </div>
+          <div class="du-panel-body">
+            <div id="du-daily-brief"></div>
+          </div>
+        </section>
+
+        <section class="du-panel du-quick-panel" aria-label="Quick update capture">
+          <div class="du-panel-header">
+            <div>
+              <h2>Quick Capture</h2>
+            <p>Log the latest movement without opening a topic page.</p>
+          </div>
+        </div>
+        <div class="du-panel-body">
+          <form id="du-quick-form" class="du-quick-form">
+            <div class="du-field">
+              <label for="du-quick-topic">Topic</label>
+              <select id="du-quick-topic" required></select>
+            </div>
+            <div class="du-field">
+              <label for="du-quick-date">Date</label>
+              <input id="du-quick-date" type="date" required>
+            </div>
+            <div class="du-field">
+              <label for="du-quick-status">Status</label>
+              <select id="du-quick-status">
+                <option value="on_track">On track</option>
+                <option value="watching">Watching</option>
+                <option value="blocked">Blocked</option>
+                <option value="paused">Paused</option>
+                <option value="complete">Complete</option>
+              </select>
+            </div>
+            <div class="du-field">
+              <label for="du-quick-type">Type</label>
+              <select id="du-quick-type"></select>
+            </div>
+            <div class="du-field">
+              <label for="du-quick-focus">Focus</label>
+              <input id="du-quick-focus" type="text" maxlength="100" autocomplete="off" placeholder="Short headline">
+            </div>
+            <div class="du-field du-quick-progress">
+              <label for="du-quick-progress">Progress</label>
+              <input id="du-quick-progress" type="text" maxlength="240" autocomplete="off" placeholder="What changed?">
+            </div>
+            <button class="du-btn du-btn-primary" type="submit">Save quick update</button>
+          </form>
+        </div>
+      </section>
+
+      <section class="du-smart-grid" id="du-smart-sections" aria-label="Smart work sections"></section>
+
+      <div class="du-home-grid">
+        <section class="du-panel du-home-topic-panel" aria-label="Active topics">
+          <div class="du-panel-header">
+            <h2>Active Topics</h2>
+            <a class="du-link-btn" href="/x_552119_daily_w_0_daily_work_log_standalone_topics.do" id="du-home-view-topics">Open Topics</a>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-topic-list" id="du-home-topic-list"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="du-page-workspace" hidden>
+      <div class="du-workspace-grid">
+        <section class="du-panel du-workspace-topic-panel" aria-label="Workspace topics">
+          <div class="du-panel-header">
+            <h2>Workspace Topics</h2>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-topic-list" id="du-workspace-topic-list"></div>
+          </div>
+        </section>
+
+        <section class="du-panel du-workspace-main-panel" aria-label="Topic details and daily update">
+          <div class="du-panel-header">
+            <h2>Daily Update Workspace</h2>
+          </div>
+          <div class="du-panel-body">
+            <div id="du-workspace-topic-detail"></div>
+
+            <form id="du-update-form">
+              <input id="du-update-id" type="hidden">
+              <select id="du-update-topic" hidden></select>
+
+              <div class="du-form-grid">
+                <div class="du-field">
+                  <label for="du-update-date">Date</label>
+                  <input id="du-update-date" type="date" required>
+                </div>
+                <div class="du-field">
+                  <label for="du-status">Status</label>
+                  <select id="du-status">
+                    <option value="on_track">On track</option>
+                    <option value="watching">Watching</option>
+                    <option value="blocked">Blocked</option>
+                    <option value="paused">Paused</option>
+                    <option value="complete">Complete</option>
+                  </select>
+                </div>
+                <div class="du-field">
+                  <label for="du-update-type">Type</label>
+                  <select id="du-update-type"></select>
+                </div>
+                <div class="du-field du-full">
+                  <label for="du-focus">Focus</label>
+                  <input id="du-focus" type="text" maxlength="100" autocomplete="off">
+                </div>
+                <div class="du-field du-full">
+                  <label for="du-progress">Progress</label>
+                  <textarea id="du-progress"></textarea>
+                  <div class="du-text-preview" id="du-progress-preview" hidden></div>
+                </div>
+              </div>
+
+              <details class="du-update-more">
+                <summary>More details</summary>
+                <div class="du-form-grid du-update-more-grid">
+                  <div class="du-field">
+                    <label for="du-blockers">Blockers</label>
+                    <textarea id="du-blockers"></textarea>
+                    <div class="du-text-preview" id="du-blockers-preview" hidden></div>
+                  </div>
+                  <div class="du-field">
+                    <label for="du-next-step">Next step</label>
+                    <textarea id="du-next-step"></textarea>
+                    <div class="du-text-preview" id="du-next-step-preview" hidden></div>
+                  </div>
+                  <div class="du-field">
+                    <label for="du-confidence">Confidence <span id="du-confidence-output">70%</span></label>
+                    <input id="du-confidence" type="range" min="0" max="100" step="5" value="70">
+                  </div>
+                  <div class="du-field">
+                    <label for="du-tags">Tags</label>
+                    <input id="du-tags" type="text" maxlength="120" placeholder="release, client, finance">
+                  </div>
+                  <div class="du-field du-full">
+                    <label for="du-related-todo">Related to-do</label>
+                    <select id="du-related-todo"></select>
+                  </div>
+                </div>
+              </details>
+
+              <div class="du-actions">
+                <button class="du-btn du-btn-primary" type="submit">
+                  <span id="du-save-update-label">Save daily update</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <div class="du-workspace-side-stack">
+          <section class="du-panel du-workspace-todo-panel" aria-label="Workspace topic to-do list">
+            <div class="du-panel-header">
+              <div>
+                <h2>To-do List</h2>
+                <p>Checklist for the selected topic.</p>
+              </div>
+            </div>
+            <div class="du-panel-body">
+              <div class="du-topic-form-todos" id="du-workspace-topic-todos" aria-label="Workspace topic to-do list">
+                <div class="du-todo-empty">Select a workspace topic before adding to-dos.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="du-panel du-workspace-history-panel" aria-label="Selected topic history">
+            <div class="du-panel-header">
+              <h2>History</h2>
+            </div>
+            <div class="du-panel-body">
+              <div class="du-card-list" id="du-workspace-history-list"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="du-page-topics" hidden>
+      <div class="du-two-column du-topic-page-grid">
+        <section class="du-panel du-topic-list-panel" aria-label="All topics">
+          <div class="du-panel-header">
+            <div>
+              <h2>Topics</h2>
+              <p id="du-topic-filter-summary">Active topics</p>
+            </div>
+            <div class="du-topic-list-tools">
+              <button class="du-btn du-filter-toggle" id="du-topic-filter-toggle" type="button" aria-expanded="false" aria-controls="du-topic-filter-menu">
+                <span class="du-filter-icon" aria-hidden="true"></span>
+                Filters
+              </button>
+              <button class="du-btn du-btn-primary" id="du-topic-reset" type="button">New topic</button>
+            </div>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-topic-quick-filters" id="du-topic-quick-filters" aria-label="Topic quick filters">
+              <button class="du-filter-pill is-selected" type="button" data-topic-filter="active">Active</button>
+              <button class="du-filter-pill" type="button" data-topic-filter="all">All</button>
+              <button class="du-filter-pill" type="button" data-topic-filter="important">Important</button>
+              <button class="du-filter-pill" type="button" data-topic-filter="inactive">Inactive</button>
+              <button class="du-filter-pill" type="button" data-topic-filter="due-soon">Due soon</button>
+            </div>
+            <div class="du-topic-filter-menu" id="du-topic-filter-menu" hidden>
+              <div class="du-filter-row">
+                <div class="du-field">
+                  <label for="du-topic-filter-context">Context</label>
+                  <select id="du-topic-filter-context"></select>
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-type">Type</label>
+                  <select id="du-topic-filter-type"></select>
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-area">Area</label>
+                  <select id="du-topic-filter-area"></select>
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-state">Status</label>
+                  <select id="du-topic-filter-state">
+                    <option value="active" selected>Active topics</option>
+                    <option value="inactive">Inactive topics</option>
+                    <option value="">All topics</option>
+                  </select>
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-priority">Priority</label>
+                  <select id="du-topic-filter-priority">
+                    <option value="">Any</option>
+                    <option value="important">Important</option>
+                    <option value="normal">Not important</option>
+                  </select>
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-from">Due from</label>
+                  <input id="du-topic-filter-from" type="date">
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-to">Due to</label>
+                  <input id="du-topic-filter-to" type="date">
+                </div>
+                <div class="du-field">
+                  <label for="du-topic-filter-search">Search</label>
+                  <input id="du-topic-filter-search" type="search" autocomplete="off">
+                </div>
+              </div>
+              <div class="du-filter-menu-actions">
+                <button class="du-link-btn" id="du-topic-filter-clear" type="button">Reset to active</button>
+                <button class="du-btn du-btn-primary" id="du-topic-filter-close" type="button">Done</button>
+              </div>
+            </div>
+            <div class="du-card-list du-topic-master-list" id="du-topics-list"></div>
+          </div>
+        </section>
+
+        <div class="du-topic-middle-stack">
+          <section class="du-panel du-topic-detail-panel" aria-label="Topic details">
+            <div class="du-panel-header">
+              <h2 id="du-topic-detail-title">New topic</h2>
+            </div>
+            <div class="du-panel-body">
+              <div id="du-topic-detail-summary"></div>
+              <form id="du-topic-form" hidden>
+                <input id="du-topic-id" type="hidden">
+                <div class="du-form-grid">
+                  <div class="du-field du-full">
+                    <label for="du-topic-name">Name</label>
+                    <input id="du-topic-name" name="topicName" type="text" maxlength="80" required autocomplete="off">
+                  </div>
+                  <div class="du-field">
+                    <label for="du-topic-context">Context</label>
+                    <select id="du-topic-context" name="topicContext">
+                      <option value="Corpay">Corpay</option>
+                      <option value="KPMG">KPMG</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Other" selected>Other</option>
+                    </select>
+                  </div>
+                  <div class="du-field">
+                    <label for="du-topic-type">Type</label>
+                    <select id="du-topic-type" name="topicType">
+                      <option value="Technical" selected>Technical</option>
+                      <option value="Meeting">Meeting</option>
+                      <option value="Self Research">Self Research</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Follow-up">Follow-up</option>
+                      <option value="Learning">Learning</option>
+                    </select>
+                  </div>
+                  <div class="du-field">
+                    <label for="du-topic-area">Area</label>
+                    <input id="du-topic-area" name="topicArea" type="text" maxlength="80" autocomplete="off">
+                  </div>
+                  <div class="du-field">
+                    <label for="du-topic-due-date">Due date</label>
+                    <input id="du-topic-due-date" name="topicDueDate" type="date">
+                  </div>
+                  <label class="du-checkbox">
+                    <input id="du-topic-active" name="topicActive" type="checkbox" checked>
+                    Active
+                  </label>
+                  <label class="du-checkbox">
+                    <input id="du-topic-important" name="topicImportant" type="checkbox">
+                    Important
+                  </label>
+                  <div class="du-field du-full">
+                    <label for="du-topic-notes">Notes</label>
+                    <textarea id="du-topic-notes" name="topicNotes"></textarea>
+                    <div class="du-text-preview" id="du-topic-notes-preview" hidden></div>
+                  </div>
+                </div>
+                <div class="du-actions">
+                  <button class="du-btn du-btn-primary" type="submit">
+                    <span id="du-topic-submit-label">Save topic</span>
+                  </button>
+                </div>
+                <div class="du-card-actions du-topic-detail-actions" id="du-topic-detail-actions"></div>
+              </form>
+            </div>
+          </section>
+        </div>
+
+        <div class="du-topic-right-stack">
+          <section class="du-panel du-topic-todo-panel" aria-label="Topic to-do list">
+            <div class="du-panel-header">
+              <div>
+                <h2>To-do List</h2>
+                <p>Checklist for the selected topic.</p>
+              </div>
+            </div>
+            <div class="du-panel-body">
+              <div class="du-topic-form-todos" id="du-topic-form-todos" aria-label="Topic to-do list">
+                <div class="du-todo-empty">Save or select a topic before adding to-dos.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="du-panel du-topic-updates-panel" aria-label="Topic update history">
+            <div class="du-panel-header">
+              <div>
+                <h2>Topic Updates</h2>
+                <p>All updates saved against the selected topic.</p>
+              </div>
+            </div>
+            <div class="du-panel-body">
+              <div class="du-card-list du-topic-update-history" id="du-topic-update-history"></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section id="du-page-updates" hidden>
+      <section class="du-panel" aria-label="All updates">
+        <div class="du-panel-header">
+          <h2>Updates</h2>
+        </div>
+        <div class="du-panel-body">
+          <div class="du-week-view" id="du-week-view" aria-label="Last seven days"></div>
+
+          <div class="du-filter-row">
+            <div class="du-field">
+              <label for="du-filter-topic">Topic</label>
+              <select id="du-filter-topic"></select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-context">Context</label>
+              <select id="du-filter-context"></select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-type">Type</label>
+              <select id="du-filter-type"></select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-area">Area</label>
+              <select id="du-filter-area"></select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-priority">Priority</label>
+              <select id="du-filter-priority">
+                <option value="">Any</option>
+                <option value="important">Important topic</option>
+                <option value="normal">Not important</option>
+              </select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-status">Status</label>
+              <select id="du-filter-status">
+                <option value="">Any</option>
+                <option value="on_track">On track</option>
+                <option value="watching">Watching</option>
+                <option value="blocked">Blocked</option>
+                <option value="paused">Paused</option>
+                <option value="complete">Complete</option>
+              </select>
+            </div>
+            <div class="du-field">
+              <label for="du-filter-from">From</label>
+              <input id="du-filter-from" type="date">
+            </div>
+            <div class="du-field">
+              <label for="du-filter-to">To</label>
+              <input id="du-filter-to" type="date">
+            </div>
+            <div class="du-field">
+              <label for="du-filter-search">Search</label>
+              <input id="du-filter-search" type="search" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="du-card-list" id="du-all-updates-list"></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="du-page-notes" hidden>
+      <div class="du-two-column">
+        <section class="du-panel" aria-label="Thought form">
+          <div class="du-panel-header">
+            <h2>Note / Thought</h2>
+            <button class="du-btn" id="du-thought-reset" type="button">New note</button>
+          </div>
+          <div class="du-panel-body">
+            <form id="du-thought-form">
+              <input id="du-thought-id" type="hidden">
+              <div class="du-form-grid">
+                <div class="du-field">
+                  <label for="du-thought-date">Date</label>
+                  <input id="du-thought-date" type="date" required>
+                </div>
+                <div class="du-field">
+                  <label for="du-thought-type">Type</label>
+                  <select id="du-thought-type">
+                    <option value="thought">Thought</option>
+                    <option value="idea">Idea</option>
+                    <option value="decision">Decision</option>
+                    <option value="reminder">Reminder</option>
+                    <option value="risk">Risk</option>
+                  </select>
+                </div>
+                <label class="du-checkbox">
+                  <input id="du-thought-important" type="checkbox">
+                  Important
+                </label>
+                <div class="du-field du-full">
+                  <label for="du-thought-title">Title</label>
+                  <input id="du-thought-title" type="text" maxlength="100" autocomplete="off">
+                </div>
+                <div class="du-field du-full">
+                  <label for="du-thought-note">Note</label>
+                  <textarea id="du-thought-note"></textarea>
+                  <div class="du-text-preview" id="du-thought-note-preview" hidden></div>
+                </div>
+                <div class="du-field du-full">
+                  <label for="du-thought-tags">Tags</label>
+                  <input id="du-thought-tags" type="text" maxlength="120" placeholder="idea, follow-up, decision">
+                </div>
+              </div>
+              <div class="du-actions">
+                <button class="du-btn du-btn-primary" type="submit">
+                  <span id="du-thought-submit-label">Save note</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <section class="du-panel" aria-label="Important notes and thoughts">
+          <div class="du-panel-header">
+            <h2>Notes &amp; Thoughts</h2>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-card-list" id="du-thought-list"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="du-page-ai" hidden>
+      <div class="du-two-column">
+        <section class="du-panel" aria-label="AI helper controls">
+          <div class="du-panel-header">
+            <div>
+              <h2>AI Helper</h2>
+              <p>Meeting parsing and free local assistance. No external AI service, no data leaves the page.</p>
+            </div>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-helper-tabs" role="tablist" aria-label="AI helper options">
+              <button class="is-selected" id="du-helper-tab-meeting" type="button" data-ai-helper-mode="meeting">Meeting Parser</button>
+              <button id="du-helper-tab-assist" type="button" data-ai-helper-mode="assist">AI Assist</button>
+            </div>
+
+            <section class="du-helper-panel" id="du-helper-panel-meeting" aria-label="Meeting parser">
+              <section class="du-meeting-automation" id="du-meeting-automation" aria-label="Meeting parser">
+                <div class="du-meeting-head">
+                  <div>
+                    <h3>Meeting Parser</h3>
+                    <p id="du-meeting-helper">Select a topic, then paste an invite or rough meeting notes.</p>
+                  </div>
+                  <div class="du-card-actions">
+                    <button class="du-link-btn" id="du-parse-meeting-invite" type="button">Parse invite</button>
+                    <button class="du-link-btn" id="du-preview-meeting-minutes" type="button">Preview minutes</button>
+                    <button class="du-link-btn" id="du-save-meeting-minutes" type="button">Save minutes</button>
+                  </div>
+                </div>
+                <div class="du-form-grid">
+                  <div class="du-field du-full">
+                    <label for="du-meeting-topic">Topic</label>
+                    <select id="du-meeting-topic"></select>
+                  </div>
+                  <div class="du-field du-full">
+                    <label for="du-meeting-source">Invite or rough notes</label>
+                    <textarea id="du-meeting-source" placeholder="Paste meeting invite, agenda, transcript, or rough notes."></textarea>
+                  </div>
+                  <div class="du-field du-full">
+                    <label for="du-meeting-preview">Generated minutes preview</label>
+                    <textarea id="du-meeting-preview" readonly></textarea>
+                  </div>
+                </div>
+              </section>
+            </section>
+
+            <section class="du-helper-panel" id="du-helper-panel-assist" aria-label="AI assist" hidden>
+              <div class="du-ai-banner">
+                <span class="du-eyebrow">Free mode</span>
+                <h2>Smart help from your existing work log</h2>
+                <p>This uses local rules to summarize, spot risk, and draft updates. It is not a paid generative AI model.</p>
+              </div>
+
+              <div class="du-form-grid">
+                <div class="du-field du-full">
+                  <label for="du-ai-topic">Topic</label>
+                  <select id="du-ai-topic"></select>
+                </div>
+                <div class="du-field du-full">
+                  <label for="du-ai-notes">Raw notes</label>
+                  <textarea id="du-ai-notes" placeholder="Paste rough notes, meeting bullets, or a quick brain dump."></textarea>
+                </div>
+              </div>
+
+              <div class="du-ai-actions">
+                <button class="du-btn" type="button" data-ai-action="analyze-topic">Analyze topic</button>
+                <button class="du-btn" type="button" data-ai-action="draft-update">Draft update</button>
+                <button class="du-btn" type="button" data-ai-action="next-steps">Suggest next steps</button>
+                <button class="du-btn" type="button" data-ai-action="risk-radar">Risk radar</button>
+                <button class="du-btn" type="button" data-ai-action="weekly-summary">Weekly narrative</button>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="du-panel" aria-label="AI helper output">
+          <div class="du-panel-header">
+            <h2>Output</h2>
+            <div class="du-card-actions">
+              <button class="du-link-btn" id="du-ai-copy" type="button">Copy</button>
+              <button class="du-link-btn" id="du-ai-use-draft" type="button">Use as update</button>
+            </div>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-ai-output" id="du-ai-output">Meeting Parser is selected. Use Preview minutes for meeting output, or switch to AI Assist for local suggestions.</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="du-page-users" hidden>
+      <div class="du-two-column">
+        <section class="du-panel" aria-label="User profile form">
+          <div class="du-panel-header">
+            <div>
+              <h2>User Access</h2>
+              <p>Create a profile, then generate a one-time API key for that person.</p>
+            </div>
+            <button class="du-btn" id="du-profile-reset" type="button">New user</button>
+          </div>
+          <div class="du-panel-body">
+            <form id="du-profile-form">
+              <input id="du-profile-id" type="hidden">
+              <div class="du-form-grid">
+                <div class="du-field">
+                  <label for="du-profile-name">Name</label>
+                  <input id="du-profile-name" type="text" maxlength="100" autocomplete="off" required>
+                </div>
+                <div class="du-field">
+                  <label for="du-profile-email">Email</label>
+                  <input id="du-profile-email" type="email" maxlength="150" autocomplete="off" required>
+                </div>
+                <label class="du-checkbox">
+                  <input id="du-profile-active" type="checkbox" checked>
+                  Active
+                </label>
+                <div class="du-field du-full">
+                  <label for="du-profile-notes">Notes</label>
+                  <textarea id="du-profile-notes"></textarea>
+                </div>
+              </div>
+              <div class="du-actions">
+                <button class="du-btn du-btn-primary" type="submit">
+                  <span id="du-profile-submit-label">Save user</span>
+                </button>
+              </div>
+            </form>
+
+            <div class="du-generated-key" id="du-generated-key" hidden></div>
+          </div>
+        </section>
+
+        <section class="du-panel" aria-label="Daily Work Log users">
+          <div class="du-panel-header">
+            <h2>Users</h2>
+          </div>
+          <div class="du-panel-body">
+            <div class="du-card-list" id="du-profile-list"></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <div class="du-toast" id="du-toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
+
