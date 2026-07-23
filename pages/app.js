@@ -387,6 +387,23 @@
     return true;
   }
 
+  function tomorrowMeetingUpdates() {
+    var tomorrow = addDays(today(), 1);
+
+    return state.updates.filter(function(update) {
+      var topic = topicById(valueOf(update.u_topic));
+
+      return !!topic &&
+        isActive(topic) &&
+        valueOf(update.u_update_date) === tomorrow &&
+        updateType(update) === 'Meeting' &&
+        updateMatchesTopicShape(update, state.commandFilter);
+    }).sort(function(a, b) {
+      return String(valueOf(b.u_update_date)).localeCompare(String(valueOf(a.u_update_date))) ||
+        String(valueOf(b.sys_updated_on)).localeCompare(String(valueOf(a.sys_updated_on)));
+    });
+  }
+
   function commandTopics(topics) {
     return (topics || activeTopics()).filter(function(topic) {
       return matchesTopicShape(topic, state.commandFilter);
@@ -1251,9 +1268,7 @@
       var dueDate = valueOf(topic.u_due_date);
       return dueDate === now;
     });
-    var tomorrowMeetings = active.filter(function(topic) {
-      return topicType(topic) === 'Meeting' && valueOf(topic.u_due_date) === tomorrow;
-    });
+    var tomorrowMeetings = tomorrowMeetingUpdates();
     var blockedTopics = active.filter(topicIsBlocked);
     var blockedUpdates = state.updates.filter(function(update) {
       return valueOf(update.u_status) === 'blocked' && updateMatchesTopicShape(update, state.commandFilter);
@@ -1266,7 +1281,7 @@
       metricCard('Active topics', active.length, openTodos + ' open to-dos', 'du-metric-primary', 'topics-active'),
       metricCard('Due today', dueToday.length, now, dueToday.length ? 'du-metric-warning' : 'du-metric-quiet', 'topics-due-today'),
       metricCard('Blocked', blockedTopics.length || blockedUpdates.length, 'Topics or updates need action', (blockedTopics.length || blockedUpdates.length) ? 'du-metric-danger' : 'du-metric-quiet', 'updates-blocked'),
-      metricCard('Tomorrow meetings', tomorrowMeetings.length, 'Prep for ' + tomorrow, tomorrowMeetings.length ? 'du-metric-warning' : 'du-metric-quiet', 'topics-tomorrow-meetings'),
+      metricCard('Tomorrow meetings', tomorrowMeetings.length, 'Meeting updates for ' + tomorrow, tomorrowMeetings.length ? 'du-metric-warning' : 'du-metric-quiet', 'updates-tomorrow-meetings'),
       metricCard('Open to-dos', openTodos, 'Across active topics', openTodos ? 'du-metric-success' : 'du-metric-quiet', 'topics-open-todos')
     ].join('');
   }
@@ -1525,8 +1540,8 @@
       return;
     }
 
-    if (action === 'topics-tomorrow-meetings') {
-      openTopicsWithFilters({ state: 'active', context: state.commandFilter.context, type: 'Meeting', from: addDays(now, 1), to: addDays(now, 1) });
+    if (action === 'updates-tomorrow-meetings') {
+      openUpdatesWithFilters({ context: state.commandFilter.context, type: 'Meeting', from: addDays(now, 1), to: addDays(now, 1) });
       return;
     }
 
@@ -1612,7 +1627,6 @@
   function dailyBriefData() {
     var active = commandTopics(activeTopics());
     var now = today();
-    var tomorrow = addDays(now, 1);
     var todayFocus = active.slice().sort(function(a, b) {
       return topicFocusScore(b) - topicFocusScore(a) ||
         priorityOf(a) - priorityOf(b) ||
@@ -1635,9 +1649,7 @@
     }).sort(function(a, b) {
       return daysBetween(latestUpdateDateForTopic(b), now) - daysBetween(latestUpdateDateForTopic(a), now);
     });
-    var tomorrowMeetings = active.filter(function(topic) {
-      return topicType(topic) === 'Meeting' && valueOf(topic.u_due_date) === tomorrow;
-    });
+    var tomorrowMeetings = tomorrowMeetingUpdates();
     var openTodos = active.reduce(function(total, topic) {
       return total + openTodoCount(topic);
     }, 0);
@@ -1679,6 +1691,15 @@
     ].join('');
   }
 
+  function briefUpdateSection(title, items, emptyText) {
+    return [
+      '<article class="du-brief-section">',
+      '<h3>' + escapeHtml(title) + '</h3>',
+      smartList(items.map(smartUpdateItem), emptyText),
+      '</article>'
+    ].join('');
+  }
+
   function renderDailyBrief() {
     var container = byId('du-daily-brief');
 
@@ -1701,9 +1722,7 @@
       briefSection('Today Plan', brief.todayFocus, 'No focus items yet.', topicAttentionReason),
       briefSection('Risks', brief.risks, 'No due or blocked items.', topicAttentionReason),
       briefSection('Needs Update', brief.missingToday, 'All active topics have an update today.', briefMeta),
-      briefSection('Tomorrow Prep', brief.tomorrowMeetings, 'No meeting topics due tomorrow.', function(topic) {
-        return openTodoCount(topic) ? openTodoCount(topic) + ' prep to-do' + (openTodoCount(topic) === 1 ? '' : 's') : 'Prep ready';
-      }),
+      briefUpdateSection('Tomorrow Prep', brief.tomorrowMeetings, 'No meeting updates scheduled tomorrow.'),
       '</div>'
     ].join('');
   }
@@ -1739,15 +1758,26 @@
       });
     }
 
+    function pushUpdates(items, emptyText) {
+      if (!items.length) {
+        lines.push('- ' + emptyText);
+        return;
+      }
+
+      items.forEach(function(update) {
+        var topic = topicById(valueOf(update.u_topic));
+        var topicName = topic ? displayOf(topic.u_name) : displayOf(update.u_topic);
+        lines.push('- ' + (displayOf(update.u_focus) || 'Meeting update') + ' [' + (topicName || 'Unknown topic') + '] - ' + (valueOf(update.u_update_date) || 'No date'));
+      });
+    }
+
     pushTopics(brief.todayFocus, 'No focus items yet.', topicAttentionReason);
     lines.push('', '## Risks');
     pushTopics(brief.risks, 'No due or blocked items.', topicAttentionReason);
     lines.push('', '## Needs Update');
     pushTopics(brief.missingToday, 'All active topics have an update today.', briefMeta);
     lines.push('', '## Tomorrow Prep');
-    pushTopics(brief.tomorrowMeetings, 'No meeting topics due tomorrow.', function(topic) {
-      return openTodoCount(topic) ? openTodoCount(topic) + ' prep to-do' + (openTodoCount(topic) === 1 ? '' : 's') : 'Prep ready';
-    });
+    pushUpdates(brief.tomorrowMeetings, 'No meeting updates scheduled tomorrow.');
 
     return lines.join('\n');
   }
@@ -2103,7 +2133,6 @@
 
     var active = commandTopics(activeTopics());
     var now = today();
-    var tomorrow = addDays(now, 1);
     var todayFocus = active.slice().sort(function(a, b) {
       return topicFocusScore(b) - topicFocusScore(a) ||
         priorityOf(a) - priorityOf(b) ||
@@ -2115,9 +2144,7 @@
         topicIsBlocked(topic) ||
         openTodoCount(topic) > 0;
     }).slice(0, 4);
-    var tomorrowMeetings = active.filter(function(topic) {
-      return topicType(topic) === 'Meeting' && valueOf(topic.u_due_date) === tomorrow;
-    }).slice(0, 4);
+    var tomorrowMeetings = tomorrowMeetingUpdates().slice(0, 4);
     var recentUpdates = state.updates.filter(function(update) {
       return updateMatchesTopicShape(update, state.commandFilter);
     }).sort(function(a, b) {
@@ -2140,9 +2167,7 @@
       '</article>',
       '<article class="du-smart-card">',
       '<h2>Tomorrow Meetings</h2>',
-      smartList(tomorrowMeetings.map(function(topic) {
-        return smartTopicItem(topic, openTodoCount(topic) ? openTodoCount(topic) + ' prep to-do' + (openTodoCount(topic) === 1 ? '' : 's') : 'Prep ready');
-      }), 'No meeting topics due tomorrow.'),
+      smartList(tomorrowMeetings.map(smartUpdateItem), 'No meeting updates scheduled tomorrow.'),
       '</article>',
       '<article class="du-smart-card">',
       '<h2>Recently Updated</h2>',
