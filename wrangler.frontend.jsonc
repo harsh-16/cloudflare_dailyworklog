@@ -2,6 +2,6 @@
   "name": "worklog",
   "compatibility_date": "2026-07-23",
   "assets": {
-    "directory": "."
+    "directory": "./pages"
   }
 }

@@ -62,6 +62,18 @@ The backend config is:
 backend/wrangler.toml
 ```
 
+The frontend Worker config for `https://worklog.harsh16.workers.dev/` is:
+
+```text
+wrangler.frontend.jsonc
+```
+
+Deploy the frontend with:
+
+```text
+npm run deploy:frontend
+```
+
 The Worker should expose:
 
 ```text

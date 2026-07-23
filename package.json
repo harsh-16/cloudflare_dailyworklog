@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "deploy": "wrangler deploy",
+    "deploy:frontend": "wrangler deploy --config wrangler.frontend.jsonc",
     "db:migrate": "wrangler d1 migrations apply daily-work-log --remote"
   },
   "devDependencies": {
