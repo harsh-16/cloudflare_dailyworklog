@@ -2249,7 +2249,7 @@
     var important = isImportant(topic);
 
     return [
-      '<article class="du-topic-row' + (selected ? ' is-selected' : '') + (important ? ' is-important' : '') + '" data-widget-state="' + (isActive(topic) ? 'active' : 'inactive') + '" data-topic="' + topic.sys_id + '">',
+      '<article class="du-topic-row' + (selected ? ' is-selected' : '') + (important ? ' is-important' : '') + '" data-action="' + action + '" data-widget-state="' + (isActive(topic) ? 'active' : 'inactive') + '" data-topic="' + topic.sys_id + '">',
       '<div class="du-topic-main">',
       '<div class="du-topic-title-line">',
       importantIcon(topic, important),

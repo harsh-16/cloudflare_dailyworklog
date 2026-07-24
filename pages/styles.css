@@ -1261,6 +1261,10 @@ input[type="checkbox"] {
   cursor: grab;
 }
 
+.du-workspace-topic-panel .du-topic-row[data-action] {
+  cursor: pointer;
+}
+
 .du-topic-row:hover,
 .du-topic-card:hover,
 .du-update-card:hover {
