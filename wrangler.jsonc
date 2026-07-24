@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "dailyworklog-api",
+  "name": "dailyworklog",
   "main": "backend/src/worker.js",
   "compatibility_date": "2026-07-23",
   "vars": {
